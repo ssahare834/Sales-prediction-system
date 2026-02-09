@@ -1,17 +1,3 @@
-"""
-Economic Order Quantity (EOQ) Calculator
-
-Calculates the optimal order quantity that minimizes total inventory costs.
-
-Formula:
-EOQ = √(2 × D × S / H)
-
-Where:
-- D = Annual demand (units)
-- S = Ordering cost per order ($)
-- H = Holding cost per unit per year ($)
-"""
-
 import numpy as np
 import pandas as pd
 
@@ -63,20 +49,14 @@ class EOQCalculator:
         if order_quantity == 0:
             raise ValueError("Order quantity cannot be zero")
         
-        # Number of orders per year
         n_orders = self.annual_demand / order_quantity
         
-        # Ordering cost (fixed cost × number of orders)
         ordering_cost = n_orders * self.order_cost
         
-        # Holding cost (average inventory × holding cost per unit)
-        # Average inventory = order_quantity / 2 (assuming constant depletion)
         holding_cost_total = (order_quantity / 2) * self.holding_cost
         
-        # Purchase cost
         purchase_cost = self.annual_demand * self.unit_cost
         
-        # Total cost
         total_cost = ordering_cost + holding_cost_total + purchase_cost
         
         return {
@@ -98,11 +78,9 @@ class EOQCalculator:
         eoq = self.calculate_eoq()
         costs = self.calculate_total_cost(eoq)
         
-        # Calculate time between orders
         n_orders = costs['n_orders']
         days_between_orders = 365 / n_orders
         
-        # Calculate order frequency
         if n_orders >= 52:
             order_frequency = f"{n_orders / 52:.1f}x per week"
         elif n_orders >= 12:
@@ -139,10 +117,8 @@ class EOQCalculator:
         base_demand = self.annual_demand
         
         for change_pct in range(demand_range[0], demand_range[1] + 1, step):
-            # Adjust demand
             new_demand = base_demand * (1 + change_pct / 100)
             
-            # Create new calculator
             calc = EOQCalculator(
                 new_demand,
                 self.order_cost,
@@ -150,7 +126,6 @@ class EOQCalculator:
                 self.unit_cost
             )
             
-            # Calculate new EOQ and costs
             policy = calc.get_optimal_policy()
             
             results.append({
@@ -202,14 +177,11 @@ def calculate_eoq_for_product(product_sales, product_info,
     Returns:
         dict: EOQ policy for product
     """
-    # Calculate annual demand from historical data
     daily_avg = product_sales['quantity_sold'].mean()
     annual_demand = daily_avg * 365
     
-    # Get unit cost
     unit_cost = product_info['cost']
     
-    # Calculate EOQ
     calc = EOQCalculator(
         annual_demand=annual_demand,
         order_cost=order_cost,
@@ -219,7 +191,6 @@ def calculate_eoq_for_product(product_sales, product_info,
     
     policy = calc.get_optimal_policy()
     
-    # Add product info
     policy['product_id'] = product_info['product_id']
     policy['category'] = product_info['category']
     policy['unit_cost'] = unit_cost
@@ -234,11 +205,10 @@ def main():
     print("ECONOMIC ORDER QUANTITY (EOQ) CALCULATOR")
     print("="*60)
     
-    # Example product
-    annual_demand = 12000  # units per year
-    order_cost = 50  # $ per order
-    unit_cost = 25  # $ per unit
-    holding_cost_percent = 0.25  # 25% of unit cost per year
+    annual_demand = 12000  
+    order_cost = 50  
+    unit_cost = 25  
+    holding_cost_percent = 0.25  
     
     print(f"\nProduct Parameters:")
     print(f"Annual Demand: {annual_demand:,} units")
@@ -246,7 +216,6 @@ def main():
     print(f"Unit Cost: ${unit_cost}")
     print(f"Holding Cost: {holding_cost_percent*100}% of unit cost per year")
     
-    # Calculate EOQ
     calc = EOQCalculator(annual_demand, order_cost, holding_cost_percent, unit_cost)
     policy = calc.get_optimal_policy()
     
