@@ -1,15 +1,3 @@
-"""
-Synthetic Retail Sales Data Generator
-
-Generates realistic sales data with:
-- Multiple products (50-200 SKUs)
-- Seasonal patterns (weekly, monthly, yearly)
-- Trends (growth/decline)
-- Promotions and holidays
-- Random noise
-- Stock level tracking
-- 2-3 years of daily data
-"""
 
 import pandas as pd
 import numpy as np
@@ -42,14 +30,14 @@ class SalesDataGenerator:
         np.random.seed(seed)
         random.seed(seed)
         
-        # Product categories
+        
         self.categories = [
             'Electronics', 'Clothing', 'Home & Garden', 
             'Sports', 'Books', 'Toys', 'Food & Beverage',
             'Beauty', 'Automotive', 'Office Supplies'
         ]
         
-        # Seasonal products
+       
         self.seasonal_products = {
             'winter': ['Heaters', 'Winter Coats', 'Snow Boots'],
             'summer': ['Fans', 'Swimwear', 'Sunscreen'],
@@ -78,10 +66,10 @@ class SalesDataGenerator:
                 'warehouse_location': np.random.choice(['WH_A', 'WH_B', 'WH_C', 'WH_D']),
             }
             
-            # Cost is 40-70% of price
+           
             product['cost'] = round(product['price'] * np.random.uniform(0.4, 0.7), 2)
             
-            # Margin percentage
+           
             product['margin_percent'] = round(
                 ((product['price'] - product['cost']) / product['price']) * 100, 2
             )
@@ -90,7 +78,7 @@ class SalesDataGenerator:
         
         df_products = pd.DataFrame(products)
         
-        # Add product characteristics affecting demand
+        
         df_products['base_demand'] = np.random.randint(10, 200, self.n_products)
         df_products['seasonality_strength'] = np.random.uniform(0, 1, self.n_products)
         df_products['trend_coefficient'] = np.random.uniform(-0.0005, 0.002, self.n_products)
@@ -122,12 +110,12 @@ class SalesDataGenerator:
             'is_month_end': dates.is_month_end.astype(int),
         })
         
-        # Add holidays and special events
+       
         df_dates['is_holiday'] = 0
         df_dates['is_promotion'] = 0
         df_dates['event_name'] = None
         
-        # Major holidays
+        
         holidays = {
             'New Year': [(1, 1)],
             'Valentine': [(2, 14)],
@@ -157,11 +145,11 @@ class SalesDataGenerator:
                 mask = (df_dates['year'] == year) & (df_dates['week_of_year'] == week)
                 df_dates.loc[mask, 'is_promotion'] = 1
         
-        # Back to school season (August-September)
+        
         mask = df_dates['month'].isin([8, 9])
         df_dates.loc[mask, 'is_back_to_school'] = 1
         
-        # Holiday shopping season (November-December)
+     
         mask = df_dates['month'].isin([11, 12])
         df_dates.loc[mask, 'is_holiday_season'] = 1
         
@@ -184,48 +172,47 @@ class SalesDataGenerator:
             for date_idx, date_row in df_dates.iterrows():
                 date = date_row['date']
                 
-                # Base demand
                 demand = base_demand
                 
-                # Trend component
+                
                 days_since_start = (date - self.start_date).days
                 demand = demand * (1 + trend * days_since_start)
                 
-                # Seasonal component
+               
                 if seasonality > 0.3:
-                    # Monthly seasonality
+                   
                     month_factor = 1 + seasonality * np.sin(2 * np.pi * date_row['month'] / 12)
                     demand *= month_factor
                     
-                    # Weekly seasonality
+                   
                     week_factor = 1 + (seasonality * 0.3) * np.sin(2 * np.pi * date_row['week_of_year'] / 52)
                     demand *= week_factor
                 
-                # Day of week pattern
+              
                 if dow_pattern == 'weekend_high' and date_row['is_weekend']:
                     demand *= 1.4
                 elif dow_pattern == 'weekday_high' and not date_row['is_weekend']:
                     demand *= 1.3
                 
-                # Holiday effect
+               
                 if date_row['is_holiday']:
                     if product['category'] in ['Electronics', 'Toys', 'Clothing']:
                         demand *= np.random.uniform(2.0, 3.5)
                     else:
                         demand *= np.random.uniform(1.2, 1.8)
                 
-                # Promotion effect
+               
                 if date_row['is_promotion']:
-                    if np.random.random() < 0.6:  # 60% of products participate
+                    if np.random.random() < 0.6:  
                         demand *= promo_sensitivity
                 
-                # Random noise (±20%)
+               
                 demand *= np.random.uniform(0.8, 1.2)
                 
-                # Ensure non-negative and integer
+                
                 quantity_sold = max(0, int(round(demand)))
                 
-                # Occasionally have zero sales (stockouts or no demand)
+                
                 if np.random.random() < 0.05:
                     quantity_sold = 0
                 
@@ -261,7 +248,7 @@ class SalesDataGenerator:
             product_sales = df_sales[df_sales['product_id'] == product_id].copy()
             product_sales = product_sales.sort_values('date')
             
-            # Initial stock (30-90 days of average demand)
+           
             avg_daily_demand = product_sales['quantity_sold'].mean()
             current_stock = int(avg_daily_demand * np.random.randint(30, 90))
             
@@ -269,17 +256,17 @@ class SalesDataGenerator:
                 date = sale['date']
                 qty_sold = sale['quantity_sold']
                 
-                # Stock before sale
+               
                 stock_before = current_stock
                 
-                # Deduct sales
+                
                 current_stock -= qty_sold
                 
-                # Reorder if below reorder point (15-30 days of demand)
+              
                 reorder_point = int(avg_daily_demand * product_info['lead_time_days'] * 1.5)
                 
                 if current_stock < reorder_point:
-                    # Order enough for 60 days
+                   
                     order_quantity = int(avg_daily_demand * 60)
                     current_stock += order_quantity
                     reorder = 1
@@ -307,20 +294,20 @@ class SalesDataGenerator:
         print("SYNTHETIC RETAIL DATA GENERATION")
         print(f"{'='*60}\n")
         
-        # Generate data
+        
         df_products = self.generate_products()
         df_dates = self.generate_date_features()
         df_sales = self.generate_sales(df_products, df_dates)
         df_stock = self.generate_stock_levels(df_products, df_sales)
         
-        # Save to CSV
+        
         print(f"\nSaving data to {save_path}...")
         df_products.to_csv(f'{save_path}products.csv', index=False)
         df_dates.to_csv(f'{save_path}date_features.csv', index=False)
         df_sales.to_csv(f'{save_path}sales.csv', index=False)
         df_stock.to_csv(f'{save_path}stock_levels.csv', index=False)
         
-        # Summary statistics
+        
         print(f"\n{'='*60}")
         print("DATA GENERATION SUMMARY")
         print(f"{'='*60}")
@@ -351,7 +338,7 @@ def main():
         save_path='data/synthetic/'
     )
     
-    # Quick preview
+   
     print("\nPRODUCTS PREVIEW:")
     print(df_products.head())
     
